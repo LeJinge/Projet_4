@@ -7,7 +7,7 @@ class GestionJoueurs:
 
     def charger_donnees(self):
         try:
-            with open("donnees.json", "r", encoding="utf-8") as fichier:
+            with open("donnees_joueurs.json", "r", encoding="utf-8") as fichier:
                 return json.load(fichier)
         except FileNotFoundError:
             return {"joueurs": []}
@@ -26,7 +26,7 @@ class GestionJoueurs:
             self.sauvegarder_donnees()
 
     def sauvegarder_donnees(self):
-        with open("donnees.json", "w", encoding="utf-8") as fichier:
+        with open("donnees_joueurs.json", "w", encoding="utf-8") as fichier:
             json.dump(self.donnees, fichier, indent=4, ensure_ascii=False)
 
     def set_vue(self, vue_joueur):
@@ -45,3 +45,4 @@ class CreationDeJoueur:
         self.gestion_joueurs.ajouter_joueur(nouveau_joueur)
         self.gestion_joueurs.vue_joueur.afficher_message("Nouveau joueur ajouté avec succès !")
         return nouveau_joueur
+
