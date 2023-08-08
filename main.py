@@ -1,17 +1,13 @@
 from Model.joueur import Joueur
-from Controller.gestion_joueur import Creation_de_joueur
-from Controller.gestion_joueur import GestionJoueurs
+from Vue.affichage_joueur import VueJoueur
+from Controller.gestion_joueur import GestionJoueurs, CreationDeJoueur
 
-import json
+if __name__ == "__main__":
+    vue_joueur = VueJoueur()
+    gestion_joueurs = GestionJoueurs()
+    gestion_joueurs.set_vue(vue_joueur)
 
-gestion_joueurs = GestionJoueurs()
-creation_joueur = Creation_de_joueur(gestion_joueurs)
+    creation_joueur = CreationDeJoueur(gestion_joueurs)
+    nouveau_joueur = creation_joueur.creer_joueur_manuellement()
 
-# Appeler la méthode de création de joueur manuellement
-nouveau_joueur = creation_joueur.creer_joueur_manuellement()
-
-# Ajouter le nouveau joueur à la liste gérée par GestionJoueurs
-gestion_joueurs.ajouter_joueur(nouveau_joueur)
-
-# Sauvegarder les données dans le fichier JSON
-gestion_joueurs.sauvegarder_donnees()
+    gestion_joueurs.ajouter_joueur(nouveau_joueur)
