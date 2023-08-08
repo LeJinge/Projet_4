@@ -7,7 +7,7 @@ class GestionJoueurs:
 
     def charger_donnees(self):
         try:
-            with open("donnees_joueurs.json", "r", encoding="utf-8") as fichier:
+            with open("joueurs.json", "r", encoding="utf-8") as fichier:
                 return json.load(fichier)
         except FileNotFoundError:
             return {"joueurs": []}
@@ -26,7 +26,7 @@ class GestionJoueurs:
             self.sauvegarder_donnees()
 
     def sauvegarder_donnees(self):
-        with open("donnees_joueurs.json", "w", encoding="utf-8") as fichier:
+        with open("joueurs.json", "w", encoding="utf-8") as fichier:
             json.dump(self.donnees, fichier, indent=4, ensure_ascii=False)
 
     def set_vue(self, vue_joueur):
