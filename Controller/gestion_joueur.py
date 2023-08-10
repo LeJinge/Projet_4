@@ -12,7 +12,6 @@ class GestionJoueurs:
         try:
             with open("joueurs.json", "r", encoding="utf-8") as fichier:
                 data = json.load(fichier)
-                print(data)
                 return data
         except FileNotFoundError:
             return []
@@ -23,11 +22,11 @@ class GestionJoueurs:
                 return True
         return False
 
-    def ajouter_joueur(self, nouveau_joueur):
-        if self.joueur_existe(nouveau_joueur):
+    def ajouter_joueur(self, joueur):
+        if self.joueur_existe(joueur):
             self.vue_joueur.afficher_message("Ce joueur existe déjà dans la liste, doublon non ajouté.")
         else:
-            self.donnees.append(vars(nouveau_joueur))
+            self.donnees.append(vars(joueur))
             self.sauvegarder_donnees()
             self.vue_joueur.afficher_message("Nouveau joueur ajouté avec succès !")
 
@@ -59,19 +58,9 @@ class GestionJoueurs:
         nom = input("Entrez le nom du joueur que vous souhaitez modifier : ")
         prenom = input("Entrez le prénom du joueur que vous souhaitez modifier : ")
 
-        # Étape 2: Chargement des données depuis le fichier joueurs.json
-        joueurs = []
-        try:
-            with open("joueurs.json", "r", encoding="utf-8") as fichier:
-                data = json.load(fichier)
-                joueurs = data
-        except FileNotFoundError:
-            print("Erreur : Fichier joueurs.json non trouvé.")
-            return
-
         # Étape 3: Recherche du joueur dans la liste
         joueur_trouve = None
-        for joueur in joueurs:
+        for joueur in self.donnees:
             if joueur['nom'] == nom and joueur['prenom'] == prenom:
                 joueur_trouve = joueur
                 break
@@ -93,10 +82,8 @@ class GestionJoueurs:
         joueur_trouve["date_de_naissance"] = nouvelle_date_naissance
         # ... [Continuez pour d'autres champs si nécessaire]
 
-        # Étape 6: Sauvegardez les modifications dans le fichier joueurs.json
-        with open("joueurs.json", "w", encoding="utf-8") as fichier:
-            json.dump({"joueurs": joueurs}, fichier, ensure_ascii=False, indent=4)
-
+        # Étape 6: Sauvegardez les modifications
+        self.sauvegarder_donnees()
         print("Le joueur a été modifié avec succès.")
 
     def supprimer_joueur(self):
@@ -124,6 +111,15 @@ class GestionJoueurs:
         date_de_naissance = self.vue_joueur.demander_information("Entrez la date de naissance du joueur : ")
 
         nouveau_joueur = Joueur(nom, prenom, date_de_naissance)
-        self.ajouter_joueur(nouveau_joueur)
         return nouveau_joueur
+
+    def recuperer_joueur(self, nom, prenom):
+        """
+        Récupère et retourne le joueur à partir de son nom et prénom.
+        Retourne None si le joueur n'est pas trouvé.
+        """
+        for joueur in self.donnees:
+            if joueur['nom'] == nom and joueur['prenom'] == prenom:
+                return joueur  # Vous retournez ici le dictionnaire représentant le joueur
+        return None
 

@@ -1,4 +1,5 @@
 from Model.tournoi import Tournoi
+from Model.joueur import Joueur
 from Vue.affichage_tournoi import AffichageTournoi
 from Controller.gestion_joueur import GestionJoueurs  # Import de la classe GestionJoueur
 import json
@@ -19,17 +20,24 @@ class GestionTournoi:
             nom_joueur = input("Nom du joueur: ")
             prenom_joueur = input("Prénom du joueur: ")
 
-            if not self.gestion_joueur.joueur_existe(nom_joueur, prenom_joueur):  # Utilisez la méthode de gestion_joueur.py
+            # Vérifiez d'abord si le joueur existe
+            joueur_temp = self.gestion_joueur.recuperer_joueur(nom_joueur, prenom_joueur)
 
-                print(f"Le joueur {prenom_joueur} {nom_joueur} n'existe pas. Veuillez le créer.")
+            if not joueur_temp:
+                # Si le joueur n'existe pas, recueillez les informations nécessaires et créez le joueur
+                print(f"Le joueur {prenom_joueur} {nom_joueur} n'existe pas.")
                 date_naissance_joueur = input("Date de naissance du joueur (format DD/MM/YYYY) : ")
-                self.gestion_joueur.ajouter_joueur(nom_joueur, prenom_joueur, date_naissance_joueur)
+                joueur_temp = Joueur(nom_joueur, prenom_joueur, date_naissance_joueur)
+                self.gestion_joueur.ajouter_joueur(joueur_temp)
+            else:
+                # Ici, le joueur existe déjà dans le système
+                pass
 
-            # Supposant que Joueur est une classe que vous avez définie ailleurs, et que la méthode ajouter_joueur renvoie un objet Joueur
-            joueur_obj = self.gestion_joueur.recuperer_joueur(nom_joueur, prenom_joueur)
-            nouveau_tournoi.liste_joueurs_enregistres.append(joueur_obj)
+            # Ajoutez le joueur à la liste des joueurs enregistrés pour le tournoi
+            nouveau_tournoi.liste_joueurs_enregistres.append(joueur_temp)
 
         print(f"Joueurs ajoutés au tournoi {nouveau_tournoi.nom}.")
+        self.sauvegarder_donnees()
 
     def afficher_infos_tournoi(self):
         if self.tournoi:
@@ -46,9 +54,22 @@ class GestionTournoi:
         try:
             with open("tournoi.json", "r", encoding="utf-8") as fichier:
                 liste_tournois_dict = json.load(fichier)
-                self.tournois = [self.dict_vers_tournoi(data) for data in liste_tournois_dict]
+                self.tournoi = [self.dict_vers_tournoi(data) for data in liste_tournois_dict]
         except FileNotFoundError:
             pass
+
+    def set_vue(self, vue):
+        self.vue_tournoi = vue
+
+    def joueur_vers_dict(joueur):
+        if isinstance(joueur, dict):
+            return joueur
+        return {
+            "nom": joueur.nom,
+            "prenom": joueur.prenom,
+            "date_de_naissance": joueur.date_de_naissance,
+            "classement": joueur.classement
+        }
 
     def tournoi_vers_dict(self, tournoi):
         data = {
@@ -59,54 +80,8 @@ class GestionTournoi:
             "nombre_tours": tournoi.nombre_tours,
             "tour_actuel": tournoi.tour_actuel,
             "liste_tours": tournoi.liste_tours,
-            # Assurez-vous que les éléments de cette liste sont sérialisables en JSON
-            "liste_joueurs_enregistres": [joueur_vers_dict(joueur) for joueur in tournoi.liste_joueurs_enregistres],
-            # Supposant que vous ayez une fonction joueur_vers_dict pour transformer un joueur en dict
+            "liste_joueurs_enregistres": [GestionTournoi.joueur_vers_dict(joueur) for joueur in
+                                          tournoi.liste_joueurs_enregistres],
             "description": tournoi.description
         }
         return data
-
-    def dict_vers_tournoi(self, data):
-        return Tournoi(data["nom"], ...)
-
-    def set_vue(self, vue):
-        self.vue_tournoi = vue
-
-    def ajouter_joueurs_depuis_json(self):
-        # Étape 1 : Chargement de la liste des joueurs
-        joueurs = []
-        try:
-            with open("joueurs.json", "r", encoding="utf-8") as fichier:
-                data = json.load(fichier)
-                joueurs = data["joueurs"]
-        except FileNotFoundError:
-            print("Fichier joueur.json non trouvé.")
-            return
-
-        # Étape 2 : Affichage et sélection des joueurs
-        joueurs_selectionnes = []
-        print("Veuillez sélectionner les joueurs pour le tournoi (entrez le numéro du joueur) :")
-        for index, joueur in enumerate(joueurs, 1):
-            print(f"{index}. {joueur['nom']} {joueur['prenom']}")
-
-        while True:
-            try:
-                choix = int(input("Sélectionnez un joueur (ou 0 pour terminer) : "))
-                if choix == 0:
-                    break
-                joueur_selectionne = joueurs[choix - 1]
-                joueurs_selectionnes.append(joueur_selectionne)
-            except (ValueError, IndexError):
-                print("Choix invalide. Veuillez réessayer.")
-
-        # Étape 3 : Ajout des joueurs au tournoi
-        if not self.tournoi:
-            print("Aucun tournoi actif. Veuillez d'abord créer un tournoi.")
-            return
-
-        dernier_tournoi = self.tournoi[-1]  # On prend le dernier tournoi ajouté
-        for joueur_dict in joueurs_selectionnes:
-            joueur_obj = Joueur(joueur_dict["nom"], joueur_dict["prenom"], joueur_dict["date_de_naissance"])
-            dernier_tournoi.liste_joueurs_enregistres.append(joueur_obj)
-
-        print(f"{len(joueurs_selectionnes)} joueurs ont été ajoutés au tournoi.")

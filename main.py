@@ -12,8 +12,10 @@ def main():
     menu.set_gestion_joueurs(gestion_joueurs)
     menu.set_gestion_tournoi(gestion_tournoi)
 
-    # Affichage du menu principal
-    menu.afficher_menu_principal()
+    # Boucle principale
+    continuer = True
+    while continuer:
+        continuer = menu.afficher_menu_principal()
 
 if __name__ == "__main__":
     main()

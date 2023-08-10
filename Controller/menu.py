@@ -35,10 +35,9 @@ class Menu:
         while True:
             print("\nMenu tournoi:")
             print("1. Créer un tournoi")
-            print("2. Modifier joueurs")
-            print("3. Supprimer joueur")
-            print("4. Afficher les informations du tournoi")
-            print("5. Retour au menu principal")
+            print("2. Reprendre la création du tournoi en cours")
+            print("3. Modifier un tournoi")
+            print("4. Retour au menu principal")
 
             choix = input("Veuillez faire un choix : ")
 
