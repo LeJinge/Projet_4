@@ -1,11 +1,19 @@
-from Vue.affichage_joueur import VueJoueur
-from Controller.gestion_joueur import GestionJoueurs, CreationDeJoueur
+from Controller.menu import Menu
+from Controller.gestion_joueur import GestionJoueurs  # Notez le "s" à "joueurs" pour correspondre au nom de fichier
+from Controller.gestion_tournoi import GestionTournoi
+
+def main():
+    # Initialisation des contrôleurs
+    gestion_joueurs = GestionJoueurs()
+    gestion_tournoi = GestionTournoi()
+
+    # Initialisation de la vue (Menu)
+    menu = Menu()
+    menu.set_gestion_joueurs(gestion_joueurs)
+    menu.set_gestion_tournoi(gestion_tournoi)
+
+    # Affichage du menu principal
+    menu.afficher_menu_principal()
 
 if __name__ == "__main__":
-    vue_joueur = VueJoueur()
-    gestion_joueurs = GestionJoueurs()
-    gestion_joueurs.set_vue(vue_joueur)
-
-    choix = ""
-    while choix != "q":
-        choix = gestion_joueurs.gerer_choix_utilisateur()
+    main()
