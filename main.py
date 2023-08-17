@@ -17,5 +17,8 @@ def main():
     while continuer:
         continuer = menu.afficher_menu_principal()
 
+    # Fermez la base de données avant de quitter
+    gestion_joueurs.fermer_db()
+
 if __name__ == "__main__":
     main()

@@ -22,9 +22,15 @@ class Menu:
             choix = self.demander_choix_menu_principal()
 
             if choix == "1":
-                self.gestion_joueurs.gerer_choix_utilisateur()
+                if self.gestion_joueurs:
+                    self.gestion_joueurs.gerer_choix_utilisateur()
+                else:
+                    print("Erreur: La gestion des joueurs n'est pas configurée.")
             elif choix == "2":
-                self.gerer_tournois()
+                if self.gestion_tournoi:
+                    self.gerer_tournois()
+                else:
+                    print("Erreur: La gestion des tournois n'est pas configurée.")
             elif choix == "3":
                 print("Au revoir!")
                 break
@@ -35,29 +41,40 @@ class Menu:
         while True:
             print("\nMenu tournoi:")
             print("1. Créer un tournoi")
-            print("2. Reprendre la création du tournoi en cours")
+            print("2. Reprendre la création d'un tournoi")
             print("3. Modifier un tournoi")
             print("4. Retour au menu principal")
 
             choix = input("Veuillez faire un choix : ")
 
-            if choix == "1":
-                nom = input("Nom du tournoi : ")
-                lieu = input("Lieu du tournoi : ")
-                date_debut = input("Date de début (format YYYY-MM-DD) : ")
-                date_fin = input("Date de fin (format YYYY-MM-DD) : ")
-                nombre_tours = int(input("Nombre de tours (défaut: 4) : ") or 4)
-                description = input("Description du tournoi : ")
-                self.gestion_tournoi.creer_tournoi(nom, lieu, date_debut, date_fin, nombre_tours, description)
-            elif choix == "2":
-                # Ajoutez la logique ou la méthode pour modifier les joueurs.
-                pass  # Pour l'instant, c'est un espace réservé.
-            elif choix == "3":
-                # Ajoutez la logique ou la méthode pour supprimer les joueurs.
-                pass  # Pour l'instant, c'est un espace réservé.
-            elif choix == "4":
-                self.gestion_tournoi.afficher_infos_tournoi()
-            elif choix == "5":
-                return  # retourner au menu principal
-            else:
-                print("Choix non reconnu. Veuillez choisir une option valide.")
+            try:
+                if choix == "1":
+                    nom = input("Nom du tournoi : ")
+                    lieu = input("Lieu du tournoi : ")
+                    date_debut = input("Date de début (format YYYY-MM-DD) : ")
+                    date_fin = input("Date de fin (format YYYY-MM-DD) : ")
+                    nombre_tours = int(input("Nombre de tours (défaut: 4) : ") or 4)
+                    description = input("Description du tournoi : ")
+                    self.gestion_tournoi.creer_tournoi(nom, lieu, date_debut, date_fin, nombre_tours, description)
+
+                elif choix == "2":
+                    nom_tournoi = input("Entrez le nom du tournoi que vous souhaitez poursuivre : ")
+                    tournoi = self.gestion_tournoi.charger_tournoi(nom_tournoi)
+                    if tournoi:
+                        print(f"Poursuite de la création du tournoi {tournoi.nom}")
+                        # Suite de la logique ici
+                    else:
+                        print("Tournoi non trouvé.")
+
+                elif choix == "3":
+                    # Logique pour modifier le tournoi
+                    pass
+
+                elif choix == "4":
+                    return
+
+                else:
+                    print("Choix non reconnu. Veuillez choisir une option valide.")
+
+            except ValueError:
+                print("Une erreur de valeur est survenue. Assurez-vous de saisir correctement les informations.")

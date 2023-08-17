@@ -1,38 +1,35 @@
-import json
+from tinydb import TinyDB, Query
 from Model.joueur import Joueur
 from Vue.affichage_joueur import AffichageJoueur
+from tinydb.storages import JSONStorage
 
 class GestionJoueurs:
     def __init__(self):
-        self.gestion_joueurs = None
-        self.donnees = self.charger_donnees()
+        self.db = TinyDB('joueurs.json', storage=JSONStorage, encoding='utf-8')
+        self.table_joueurs = self.db.table('joueurs')
         self.vue_joueur = AffichageJoueur()
+        self.JoueurQuery = Query()
 
-    def charger_donnees(self):
-        try:
-            with open("joueurs.json", "r", encoding="utf-8") as fichier:
-                data = json.load(fichier)
-                return data
-        except FileNotFoundError:
-            return []
-
-    def joueur_existe(self, nouveau_joueur):
-        for joueur in self.donnees:
-            if joueur["nom"] == nouveau_joueur.nom and joueur["prenom"] == nouveau_joueur.prenom:
-                return True
-        return False
+    def joueur_existe(self, nom, prenom):
+        joueur_dict = self.db.get((self.JoueurQuery.nom == nom) & (self.JoueurQuery.prenom == prenom))
+        return bool(joueur_dict)
 
     def ajouter_joueur(self, joueur):
-        if self.joueur_existe(joueur):
+        print("Méthode ajouter_joueur appelée.")  # Debug
+        if self.joueur_existe(joueur.nom, joueur.prenom):
+            print("Joueur trouvé, doublon détecté.")  # Debug
             self.vue_joueur.afficher_message("Ce joueur existe déjà dans la liste, doublon non ajouté.")
         else:
-            self.donnees.append(vars(joueur))
-            self.sauvegarder_donnees()
-            self.vue_joueur.afficher_message("Nouveau joueur ajouté avec succès !")
-
-    def sauvegarder_donnees(self):
-        with open("joueurs.json", "w", encoding="utf-8") as fichier:
-            json.dump(self.donnees, fichier, indent=4, ensure_ascii=False)
+            try:
+                self.db.insert({
+                    'nom': joueur.nom,
+                    'prenom': joueur.prenom,
+                    'date_de_naissance': joueur.date_de_naissance,
+                    'identifiant_echec': joueur.identifiant_echec
+                })
+                self.vue_joueur.afficher_message("Nouveau joueur ajouté avec succès !")
+            except Exception as e:
+                print("Erreur lors de l'insertion:", e)
 
     def set_vue(self, vue_joueur):
         self.vue_joueur = vue_joueur
@@ -42,84 +39,96 @@ class GestionJoueurs:
             choix = self.vue_joueur.afficher_menu()
 
             if choix == "1":
-                nouveau_joueur = self.creer_joueur_manuellement()  # crée un nouveau joueur
+                nouveau_joueur = self.creer_joueur_manuellement()
                 self.ajouter_joueur(nouveau_joueur)
             elif choix == "2":
                 self.supprimer_joueur()
             elif choix == "3":
                 self.modifier_joueur()
             elif choix == "4":
-                return  # Retour au menu principal
+                return
             else:
                 print("Choix non reconnu. Veuillez choisir une option valide.")
 
     def modifier_joueur(self):
-        # Étape 1: Demande du nom et prénom du joueur à l'utilisateur
         nom = input("Entrez le nom du joueur que vous souhaitez modifier : ")
         prenom = input("Entrez le prénom du joueur que vous souhaitez modifier : ")
+        identifiant = input("Entrez l'Identifiant National d'échec du joueur que vous souhaitez modifier : ")
 
-        # Étape 3: Recherche du joueur dans la liste
-        joueur_trouve = None
-        for joueur in self.donnees:
-            if joueur['nom'] == nom and joueur['prenom'] == prenom:
-                joueur_trouve = joueur
-                break
+        joueur_trouve = self.db.get(
+            (self.JoueurQuery.nom == nom) &
+            (self.JoueurQuery.prenom == prenom) &
+            (self.JoueurQuery.identifiant_echec == identifiant)
+        )
 
         if not joueur_trouve:
             print("Erreur : Le joueur n'a pas été trouvé.")
             return
 
-        # Étape 4: Lancement du processus de création pour obtenir les nouvelles informations
         print("Entrez les nouvelles informations pour le joueur:")
         nouveau_nom = input("Nom : ")
         nouveau_prenom = input("Prénom : ")
         nouvelle_date_naissance = input("Date de naissance (format YYYY-MM-DD) : ")
-        # ... [Continuez pour d'autres champs si nécessaire]
+        nouvel_identifiant = input("Nouvel Identifiant National d'échec : ")
 
-        # Étape 5: Remplacement des anciennes données par les nouvelles
-        joueur_trouve["nom"] = nouveau_nom
-        joueur_trouve["prenom"] = nouveau_prenom
-        joueur_trouve["date_de_naissance"] = nouvelle_date_naissance
-        # ... [Continuez pour d'autres champs si nécessaire]
+        self.db.update({
+            "nom": nouveau_nom,
+            "prenom": nouveau_prenom,
+            "date_de_naissance": nouvelle_date_naissance,
+            "identifiant_echec": nouvel_identifiant
+        }, (self.JoueurQuery.nom == nom) & (self.JoueurQuery.prenom == prenom) & (
+                    self.JoueurQuery.identifiant_echec == identifiant))
 
-        # Étape 6: Sauvegardez les modifications
-        self.sauvegarder_donnees()
         print("Le joueur a été modifié avec succès.")
 
     def supprimer_joueur(self):
-        nom_a_effacer = self.vue_joueur.demander_information("Entrez le nom du joueur à effacer : ")
-        prenom_a_effacer = self.vue_joueur.demander_information("Entrez le prénom du joueur à effacer : ")
+        nom_a_effacer = input("Entrez le nom du joueur à effacer : ")
+        prenom_a_effacer = input("Entrez le prénom du joueur à effacer : ")
+        identifiant_a_effacer = input("Entrez l'Identifiant National d'échec du joueur à effacer : ")
 
-        joueurs = self.donnees
-        joueur_trouve = False
+        removed_count = self.db.remove(
+            (self.JoueurQuery.nom == nom_a_effacer) &
+            (self.JoueurQuery.prenom == prenom_a_effacer) &
+            (self.JoueurQuery.identifiant_echec == identifiant_a_effacer)
+        )
 
-        for joueur in joueurs:
-            if joueur["nom"] == nom_a_effacer and joueur["prenom"] == prenom_a_effacer:
-                joueurs.remove(joueur)
-                joueur_trouve = True
-                break
-
-        if joueur_trouve:
-            self.sauvegarder_donnees()
+        if removed_count:
             self.vue_joueur.afficher_message("Joueur supprimé avec succès !")
         else:
             self.vue_joueur.afficher_message("Joueur non trouvé.")
 
     def creer_joueur_manuellement(self):
-        prenom = self.vue_joueur.demander_information("Entrez le prénom du joueur : ")
-        nom = self.vue_joueur.demander_information("Entrez le nom du joueur : ")
-        date_de_naissance = self.vue_joueur.demander_information("Entrez la date de naissance du joueur : ")
+        prenom = input("Entrez le prénom du joueur : ")
+        nom = input("Entrez le nom du joueur : ")
+        date_de_naissance = input("Entrez la date de naissance du joueur : ")
+        identifiant_echec = input("Entrez l'Identifiant National d'échec du joueur : ")
 
-        nouveau_joueur = Joueur(nom, prenom, date_de_naissance)
+        nouveau_joueur = Joueur(nom, prenom, date_de_naissance, identifiant_echec)
         return nouveau_joueur
 
-    def recuperer_joueur(self, nom, prenom):
-        """
-        Récupère et retourne le joueur à partir de son nom et prénom.
-        Retourne None si le joueur n'est pas trouvé.
-        """
-        for joueur in self.donnees:
-            if joueur['nom'] == nom and joueur['prenom'] == prenom:
-                return joueur  # Vous retournez ici le dictionnaire représentant le joueur
-        return None
+    def recuperer_joueur(self, nom=None, prenom=None, identifiant_echec=None):
+        # S'assurer que soit le nom et prénom, soit l'identifiant sont fournis
+        if not (nom and prenom) and not identifiant_echec:
+            raise ValueError("Doit fournir soit (nom et prénom) soit identifiant_echec pour récupérer un joueur.")
 
+        # Recherche par identifiant
+        if identifiant_echec:
+            joueur_dict = self.db.get(self.JoueurQuery.identifiant_echec == identifiant_echec)
+
+        # Recherche par nom et prénom
+        else:
+            joueur_dict = self.db.get((self.JoueurQuery.nom == nom) & (self.JoueurQuery.prenom == prenom))
+
+        if joueur_dict:
+            # Convertir le dictionnaire en un objet Joueur
+            return Joueur(
+                joueur_dict['nom'],
+                joueur_dict['prenom'],
+                joueur_dict['date_de_naissance'],
+                joueur_dict.get('identifiant_echec', None)
+            )
+        else:
+            return None
+
+    def fermer_db(self):
+        self.db.close()
